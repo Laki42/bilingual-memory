@@ -47,10 +47,32 @@
     }
     .face{position:absolute; inset:0; border-radius:16px; display:flex; align-items:center; justify-content:center; padding:10px; backface-visibility: hidden;}
 
-    .back{
-      background: repeating-linear-gradient(135deg, #f3f4f6 0 10px, #eef2ff 10px 20px);
-      border:1px solid #e5e7eb;
-    }
+    .back {
+  background: #f9f9ff;
+  border: 1px solid #e5e7eb;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  font-size: 24px;
+  color: #8b5cf6; /* パステル紫 */
+}
+
+.back::before {
+  content: "♞ ♞ ♞ ♞ ♞ ♞ ♞ ♞ ♞ ♞ ♞";
+  white-space: pre-wrap;
+}
+
+/* 隠れナイト（色違い1つだけ） */
+.back::after {
+  content: "♞";
+  color: #ec4899; /* ピンクで目立たせる */
+  font-size: 28px;
+  grid-column: 2;
+  grid-row: 3;
+  justify-self: center;
+  align-self: center;
+}
+
     .front{
       background:var(--card); border:1px solid #e5e7eb; transform: rotateY(180deg);
       display:flex; flex-direction:column; gap:8px; text-align:center;
