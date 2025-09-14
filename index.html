@@ -47,30 +47,20 @@
     }
     .face{position:absolute; inset:0; border-radius:16px; display:flex; align-items:center; justify-content:center; padding:10px; backface-visibility: hidden;}
 
-    .back {
-  background: #f9f9ff;
-  border: 1px solid #e5e7eb;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(4, 1fr);
-  font-size: 24px;
-  color: #8b5cf6; /* パステル紫 */
+  .back {
+  background: linear-gradient(135deg, #fffafc, #f0f9ff); /* ほんのりパステル背景 */
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;   /* 大きめナイト */
+  color: rgba(139, 92, 246, 0.25); /* 薄いパステル紫 (透明度つき) */
+.hidden-knight {
+  color: rgba(236, 72, 153, 0.6); /* パステルピンクでちょい濃い */
+  text-shadow: 0 0 8px #f9a8d4;
 }
 
-.back::before {
-  content: "♞ ♞ ♞ ♞ ♞ ♞ ♞ ♞ ♞ ♞ ♞";
-  white-space: pre-wrap;
-}
-
-/* 隠れナイト（色違い1つだけ） */
-.back::after {
-  content: "♞";
-  color: #ec4899; /* ピンクで目立たせる */
-  font-size: 28px;
-  grid-column: 2;
-  grid-row: 3;
-  justify-self: center;
-  align-self: center;
 }
 
     .front{
