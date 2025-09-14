@@ -47,16 +47,28 @@
     }
     .face{position:absolute; inset:0; border-radius:16px; display:flex; align-items:center; justify-content:center; padding:10px; backface-visibility: hidden;}
 
-  .back {
-  background: linear-gradient(135deg, #fffafc, #f0f9ff); /* ほんのりパステル背景 */
+ .back {
+  background: linear-gradient(135deg, #fffafc, #f0f9ff);
   border: 2px solid #e5e7eb;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 64px;   /* 大きめナイト */
-  color: rgba(139, 92, 246, 0.25); /* 薄いパステル紫 (透明度つき) */
+  font-family: "Segoe UI Symbol", "Noto Color Emoji", system-ui, sans-serif;
+}
 
+/* 通常のナイト（大きくて淡い色） */
+.back .knight {
+  font-size: 64px;
+  color: rgba(139, 92, 246, 0.25); /* 薄いパステル紫 */
+  line-height: 1;
+}
+
+/* 隠れナイト（ランダムで1枚だけ） */
+.back .knight.hidden-knight {
+  color: rgba(236, 72, 153, 0.6); /* ピンク */
+  text-shadow: 0 0 8px #f9a8d4;
+  transform: scale(1.1); /* ちょっと大きめ */
 }
 
     .front{
@@ -212,9 +224,18 @@
       const btn = document.createElement('button');
       btn.setAttribute('aria-label', 'flip card');
 
-      const back = document.createElement('div');
-      back.className = 'face back';
-      back.innerHTML = '<svg aria-hidden="true" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 7h10M7 12h10M7 17h6"/></svg>';
+      // --- 裏面 ---
+const back = document.createElement('div');
+back.className = 'face back';
+
+// ナイトを中央に配置
+const k = document.createElement('span');
+k.className = 'knight';
+k.textContent = '♞';   // ここでしっかりナイトを入れる
+back.appendChild(k);
+
+// ランダムで1枚だけ特別扱い
+if (idx === randomIndex) k.classList.add('hidden-knight');
 
       const front = document.createElement('div');
       front.className = 'face front';
