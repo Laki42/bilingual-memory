@@ -8,6 +8,17 @@
     :root{
       --bg1:#f9ecff; --bg2:#e8f6ff; --ink:#1f2937; --muted:#6b7280; --accent:#8b5cf6; --accent2:#14b8a6;
       --card:#ffffff; --good:#16a34a; --bad:#ef4444; --gold:#f59e0b;
+.knight-back {
+  font-size: 64px;
+  color: rgba(139, 92, 246, 0.25); /* 薄いパステル紫 */
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
     }
     html,body{height:100%;}
     body{
@@ -95,6 +106,8 @@
             <option value="advanced">上級</option>
             <option value="extreme">エクストリーム</option>
             <option value="nuance">極悪モード（ニュアンス特訓）</option>
+<!-- Category セレクトの中に追加 -->
+<option value="chess">チェス用語</option>
             <option value="trap">従来のトラップ（旧デッキ）</option>
           </select>
         </label>
@@ -233,6 +246,79 @@
       { id:'wear_mitsukeru', ja:'身につける', en:'wear',    hint:'服・アクセ' },
       { id:'consume_shouhi', ja:'消費する',   en:'consume', hint:'資源・エネルギー' },
     ],
+chess: [
+  // 駒
+  { id:'pawn', ja:'ポーン', en:'pawn' },
+  { id:'knight', ja:'ナイト', en:'knight' },
+  { id:'bishop', ja:'ビショップ', en:'bishop' },
+  { id:'rook', ja:'ルーク', en:'rook' },
+  { id:'queen', ja:'クイーン', en:'queen' },
+  { id:'king', ja:'キング', en:'king' },
+
+  // 基本
+  { id:'check', ja:'チェック', en:'check' },
+  { id:'double_check', ja:'ダブルチェック', en:'double check' },
+  { id:'checkmate', ja:'チェックメイト', en:'checkmate' },
+  { id:'stalemate', ja:'ステイルメイト', en:'stalemate' },
+  { id:'draw', ja:'引き分け', en:'draw' },
+  { id:'resign', ja:'投了', en:'resign' },
+
+  // ルール/手筋
+  { id:'castling', ja:'キャスリング', en:'castling' },
+  { id:'en_passant', ja:'アンパッサン', en:'en passant' },
+  { id:'promotion', ja:'プロモーション', en:'promotion' },
+  { id:'underpromotion', ja:'アンダープロモーション', en:'underpromotion' },
+
+  // 戦術（タクティクス）
+  { id:'fork', ja:'フォーク', en:'fork' },
+  { id:'pin', ja:'ピン', en:'pin' },
+  { id:'skewer', ja:'スキュアー', en:'skewer' },
+  { id:'discovered_attack', ja:'発見攻撃', en:'discovered attack' },
+  { id:'double_attack', ja:'両取り', en:'double attack' },
+  { id:'windmill', ja:'ウィンドミル', en:'windmill' },
+  { id:'zwischenzug', ja:'ツヴィッシェンツーク', en:'zwischenzug' },
+  { id:'sacrifice', ja:'サクリファイス（捨て駒）', en:'sacrifice' },
+  { id:'exchange_sacrifice', ja:'交換犠牲', en:'exchange sacrifice' },
+  { id:'smothered_mate', ja:'窒息メイト', en:'smothered mate' },
+  { id:'back_rank_mate', ja:'バックランクメイト', en:'back rank mate' },
+  { id:'perpetual_check', ja:'連続王手', en:'perpetual check' },
+  { id:'battery', ja:'バッテリー', en:'battery' },
+  { id:'fianchetto', ja:'フィアンケット', en:'fianchetto' },
+  { id:'gambit', ja:'ガンビット', en:'gambit' },
+
+  // 戦略/概念
+  { id:'tempo', ja:'テンポ', en:'tempo' },
+  { id:'initiative', ja:'イニシアチブ', en:'initiative' },
+  { id:'prophylaxis', ja:'予防手', en:'prophylaxis' },
+  { id:'opposition', ja:'オポジション', en:'opposition' },
+  { id:'zugzwang', ja:'ツークツワンク', en:'zugzwang' },
+  { id:'space', ja:'スペース（駒の利き/領域）', en:'space' },
+  { id:'pawn_structure', ja:'ポーン構造', en:'pawn structure' },
+  { id:'isolated_pawn', ja:'孤立ポーン', en:'isolated pawn' },
+  { id:'doubled_pawns', ja:'ダブルポーン', en:'doubled pawns' },
+  { id:'passed_pawn', ja:'パスポーン', en:'passed pawn' },
+  { id:'minor_piece', ja:'小駒', en:'minor piece' },
+  { id:'major_piece', ja:'大駒', en:'major piece' },
+
+  // 局面/進行
+  { id:'opening', ja:'オープニング', en:'opening' },
+  { id:'middlegame', ja:'ミドルゲーム', en:'middlegame' },
+  { id:'endgame', ja:'エンドゲーム', en:'endgame' },
+
+  // 評価/ミス
+  { id:'brilliant', ja:'ブリリアント', en:'brilliant' },
+  { id:'great_move', ja:'グレートムーブ', en:'great move' },
+  { id:'inaccuracy', ja:'不正確', en:'inaccuracy' },
+  { id:'mistake', ja:'ミステイク', en:'mistake' },
+  { id:'blunder', ja:'ブランダー（大悪手）', en:'blunder' },
+
+  // オープニング名（少し）
+  { id:'sicilian_defense', ja:'シシリアン・ディフェンス', en:'Sicilian Defense' },
+  { id:'french_defense', ja:'フレンチ・ディフェンス', en:'French Defense' },
+  { id:'ruy_lopez', ja:'ルイ・ロペス', en:'Ruy Lopez' },
+  { id:'queens_gambit', ja:'クイーンズ・ギャンビット', en:\"Queen's Gambit\" },
+],
+
     // 既存のトラップ（Akiが最初に遊んだやつ）も選べるように残す
     trap: [
       { id:'warm1',  ja:'温かい', en:'warm' },
@@ -309,9 +395,15 @@
       btn.setAttribute('aria-label', 'flip card');
 
       const back = document.createElement('div');
-      back.className = 'face back';
-      back.innerHTML = '<svg aria-hidden="true" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 7h10M7 12h10M7 17h6"/></svg>';
+back.className = 'face back';
 
+if (categoryEl.value === 'chess') {
+  // チェス用語のときだけナイト♞を大きく薄色で中央表示
+  back.innerHTML = '<div class="knight-back">♞</div>';
+} else {
+  // 通常の背面（既存のSVGパターン）
+  back.innerHTML = '<svg aria-hidden="true" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 7h10M7 12h10M7 17h6"/></svg>';
+}
       const front = document.createElement('div');
       front.className = 'face front';
       const label = document.createElement('div');
