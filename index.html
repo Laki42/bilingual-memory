@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bilingual Memory </title>
+  <title>Bilingual Memory</title>
   <style>
     :root{
       --bg1:#f9ecff; --bg2:#e8f6ff; --ink:#1f2937; --muted:#6b7280; --accent:#8b5cf6; --accent2:#14b8a6;
@@ -47,10 +47,12 @@
     }
     .face{position:absolute; inset:0; border-radius:16px; display:flex; align-items:center; justify-content:center; padding:10px; backface-visibility: hidden;}
 
+    /* 裏面（シンプルな柄のまま） */
     .back{
       background: repeating-linear-gradient(135deg, #f3f4f6 0 10px, #eef2ff 10px 20px);
       border:1px solid #e5e7eb;
     }
+    /* 表面 */
     .front{
       background:var(--card); border:1px solid #e5e7eb; transform: rotateY(180deg);
       display:flex; flex-direction:column; gap:8px; text-align:center;
@@ -81,14 +83,26 @@
     <header>
       <div>
         <h1>🃏 Bilingual Memory</h1>
-        <div class="sub">Flip two cards. Make a <b>JP↔EN</b> pair for the <em>same concept</em>. Beware of traps like <b>light</b>（光 / 軽い）and <b>warm</b>（温かい / あったかい）😉</div>
+        <div class="sub">
+          JP↔EN の同じ概念ペアを合わせてね。<b>カテゴリ</b>と<b>枚数</b>を選んで <em>New game</em>！
+          （例：<b>light</b> は「光／軽い」で別概念、<b>warm</b> は「温かい／暖かい」で使い分け😉）
+        </div>
       </div>
       <div class="controls">
+        <label>Category
+          <select id="category">
+            <option value="daily">日常</option>
+            <option value="advanced">上級</option>
+            <option value="extreme">エクストリーム</option>
+            <option value="nuance">極悪モード（ニュアンス特訓）</option>
+            <option value="trap">従来のトラップ（旧デッキ）</option>
+          </select>
+        </label>
         <label>Deck
           <select id="deckSize">
-            <option value="8">Trap Deck — 8 pairs (16 cards)</option>
-            <option value="10" selected>Trap Deck — 10 pairs (20 cards)</option>
-            <option value="12">Trap Deck — 12 pairs (24 cards)</option>
+            <option value="8">8 pairs (16 cards)</option>
+            <option value="10" selected>10 pairs (20 cards)</option>
+            <option value="12">12 pairs (24 cards)</option>
           </select>
         </label>
         <label class="toggle">
@@ -107,32 +121,136 @@
 
     <main class="board" id="board" style="--cols:5"></main>
 
-    <p class="footer">Tip: Two different <b>"light"</b> cards exist (same English text, different meanings). The correct pair must share the same hidden concept and be <b>JP↔EN</b> (not JP↔JP or EN↔EN).</p>
+    <p class="footer">DebugをONにするとカード表に「概念ヒント」が小さく出るよ（学習向け）。</p>
   </div>
 
   <div class="toast" id="toast"></div>
 
   <script>
-  // ====== DATA ======
-  // Master list of pairs (trap-focused). Each pair creates 2 cards: JA and EN.
-  // If you want to tweak words, edit here.
-  const MASTER_PAIRS = [
-    { id: 'warm1', ja: '温かい', en: 'warm' },
-    { id: 'warm2', ja: 'あったかい', en: 'warm' },
-    { id: 'light1', ja: '光',     en: 'light' },
-    { id: 'light2', ja: '軽い',   en: 'light' },
-    { id: 'see',    ja: '見る',   en: 'see' },
-    { id: 'watch',  ja: '観る',   en: 'watch' },
-    { id: 'hear',   ja: '聞く',   en: 'hear' },
-    { id: 'listen', ja: '聴く',   en: 'listen' },
-    { id: 'fast',   ja: '速い',   en: 'fast' },
-    { id: 'early',  ja: '早い',   en: 'early' },
-    // Optional extras if you want 12 pairs
-    { id: 'up',     ja: '上',     en: 'up' },
-    { id: 'climb',  ja: '上る',   en: 'climb' },
-  ];
+  // ====== カテゴリ辞書 ======
+  // できるだけ今の構造を保つため、各「概念」は { id, ja, en, hint? } に統一
+  // （生成時に JP/EN の2枚に展開し、pair は id で判定）
+  const WORD_CATEGORIES = {
+    daily: [
+      { id:'friend',   ja:'友達',     en:'friend' },
+      { id:'work',     ja:'仕事',     en:'work' },
+      { id:'school',   ja:'学校',     en:'school' },
+      { id:'money',    ja:'お金',     en:'money' },
+      { id:'time',     ja:'時間',     en:'time' },
+      { id:'family',   ja:'家族',     en:'family' },
+      { id:'train',    ja:'電車',     en:'train' },
+      { id:'meal',     ja:'食事',     en:'meal' },
+      { id:'message',  ja:'メッセージ', en:'message' },
+      { id:'vacation', ja:'休暇',     en:'vacation' },
+      { id:'water',    ja:'水',       en:'water' },
+      { id:'house',    ja:'家',       en:'house' },
+      { id:'phone',    ja:'電話',     en:'phone' },
+      { id:'coffee',   ja:'コーヒー', en:'coffee' },
+      { id:'meeting',  ja:'会議',     en:'meeting' },
+    ],
+    advanced: [
+      { id:'dream',      ja:'夢',     en:'dream' },
+      { id:'freedom',    ja:'自由',   en:'freedom' },
+      { id:'memory',     ja:'記憶',   en:'memory' },
+      { id:'justice',    ja:'正義',   en:'justice' },
+      { id:'emotion',    ja:'感情',   en:'emotion' },
+      { id:'destiny',    ja:'運命',   en:'destiny' },
+      { id:'eternity',   ja:'永遠',   en:'eternity' },
+      { id:'silence',    ja:'沈黙',   en:'silence' },
+      { id:'truth',      ja:'真実',   en:'truth' },
+      { id:'illusion',   ja:'幻',     en:'illusion' },
+      { id:'chaos',      ja:'混沌',   en:'chaos' },
+      { id:'harmony',    ja:'調和',   en:'harmony' },
+    ],
+    extreme: [
+      { id:'quantum',       ja:'量子',             en:'quantum' },
+      { id:'relativity',    ja:'相対性理論',       en:'relativity' },
+      { id:'consciousness', ja:'意識',             en:'consciousness' },
+      { id:'metaphor',      ja:'隠喩',             en:'metaphor' },
+      { id:'singularity',   ja:'特異点',           en:'singularity' },
+      { id:'entropy',       ja:'エントロピー',     en:'entropy' },
+      { id:'neuralnet',     ja:'ニューラルネットワーク', en:'neural network' },
+      { id:'paradox',       ja:'逆説',             en:'paradox' },
+      { id:'ontology',      ja:'存在論',           en:'ontology' },
+      { id:'epistemology',  ja:'認識論',           en:'epistemology' },
+      { id:'aesthetics',    ja:'美学',             en:'aesthetics' },
+      { id:'dialectic',     ja:'弁証法',           en:'dialectic' },
+    ],
+    // Akiの“ニュアンス地獄”＝極悪モード
+    nuance: [
+      // 温度・感覚
+      { id:'warm_atataka', ja:'暖かい', en:'warm', hint:'気温や空気' },
+      { id:'warm_otsukai', ja:'温かい', en:'warm', hint:'気持ち・料理' },
+      { id:'hot_atsui',    ja:'熱い',   en:'hot',  hint:'触ると危険' },
+      { id:'cool_suzushii',ja:'涼しい', en:'cool', hint:'快適な冷たさ' },
+      { id:'cold_tsumetai',ja:'冷たい', en:'cold', hint:'温度／態度' },
+      { id:'cold_sameta',  ja:'冷めた', en:'cold', hint:'興味・情熱がなくなる' },
 
-  // ====== UTIL ======
+      // 速さ・時間
+      { id:'early_hayai',  ja:'早い',   en:'early', hint:'時間が前' },
+      { id:'fast_hayai',   ja:'速い',   en:'fast',  hint:'スピード' },
+
+      // 高さ・大きさ
+      { id:'high_takai',   ja:'高い',   en:'high',      hint:'位置・背の高さ' },
+      { id:'exp_takai',    ja:'高い',   en:'expensive', hint:'値段' },
+
+      // 見る
+      { id:'see_miru',     ja:'見る',   en:'see',     hint:'一般的に目で見る' },
+      { id:'watch_miru',   ja:'観る',   en:'watch',   hint:'意識して注視する' },
+      { id:'examine_miru', ja:'診る',   en:'examine', hint:'医者が体を診る' },
+
+      // 聞く
+      { id:'hear_kiku',    ja:'聞く',   en:'hear',   hint:'自然に耳に入る' },
+      { id:'listen_kiku',  ja:'聴く',   en:'listen', hint:'意識して耳を傾ける' },
+      { id:'ask_kiku',     ja:'訊く',   en:'ask',    hint:'質問する' },
+
+      // 分かる
+      { id:'know_shiru',   ja:'知る',     en:'know',       hint:'知識として知っている' },
+      { id:'understand',   ja:'分かる',   en:'understand', hint:'理解する' },
+      { id:'recognize',    ja:'分かる',   en:'recognize',  hint:'見て識別する' },
+
+      // 持つ
+      { id:'have_motsu',   ja:'持つ',       en:'have',  hint:'所有している' },
+      { id:'hold_motsu',   ja:'持つ',       en:'hold',  hint:'手に持っている' },
+      { id:'own_shoyuu',   ja:'所有する',   en:'own',   hint:'正式に自分のもの' },
+      { id:'carry_mochi',  ja:'持ち運ぶ',   en:'carry', hint:'運んでいる途中' },
+
+      // 作る
+      { id:'make_tsukuru',   ja:'作る',    en:'make',    hint:'何かを作り出す' },
+      { id:'create_souzou',  ja:'創造する', en:'create',  hint:'新しいものを生み出す' },
+      { id:'build_tateru',   ja:'建てる',   en:'build',   hint:'建築・構造物' },
+      { id:'produce_seisan', ja:'生産する', en:'produce', hint:'大量生産' },
+
+      // 考える
+      { id:'think_kangae',   ja:'考える',   en:'think',    hint:'思い浮かべる' },
+      { id:'consider_kouryo',ja:'考慮する', en:'consider', hint:'よく考えて判断' },
+      { id:'imagine_souzou', ja:'想像する', en:'imagine',  hint:'頭の中で描く' },
+      { id:'guess_suisoku',  ja:'推測する', en:'guess',    hint:'当てずっぽう' },
+
+      // 使う
+      { id:'use_tsukau',     ja:'使う',       en:'use',     hint:'一般的に利用' },
+      { id:'spend_tsukau',   ja:'使う',       en:'spend',   hint:'お金・時間を消費' },
+      { id:'wear_mitsukeru', ja:'身につける', en:'wear',    hint:'服・アクセ' },
+      { id:'consume_shouhi', ja:'消費する',   en:'consume', hint:'資源・エネルギー' },
+    ],
+    // 既存のトラップ（Akiが最初に遊んだやつ）も選べるように残す
+    trap: [
+      { id:'warm1',  ja:'温かい', en:'warm' },
+      { id:'warm2',  ja:'あったかい', en:'warm' },
+      { id:'light1', ja:'光',     en:'light' },
+      { id:'light2', ja:'軽い',   en:'light' },
+      { id:'see',    ja:'見る',   en:'see' },
+      { id:'watch',  ja:'観る',   en:'watch' },
+      { id:'hear',   ja:'聞く',   en:'hear' },
+      { id:'listen', ja:'聴く',   en:'listen' },
+      { id:'fast',   ja:'速い',   en:'fast' },
+      { id:'early',  ja:'早い',   en:'early' },
+      { id:'up',     ja:'上',     en:'up' },
+      { id:'climb',  ja:'上る',   en:'climb' },
+    ],
+  };
+
+  // ====== ユーティリティ ======
   const $ = (q) => document.querySelector(q);
   const board = $('#board');
   const timeEl = $('#time');
@@ -141,20 +259,13 @@
   const totalPairsEl = $('#totalPairs');
   const statusEl = $('#status');
   const deckSizeEl = $('#deckSize');
+  const categoryEl = $('#category');
   const debugToggle = $('#debugToggle');
   const toastEl = $('#toast');
 
   let state = {
-    deck: [], // array of card objects
-    first: null, // first flipped element
-    second: null, // second flipped element
-    lock: false,
-    moves: 0,
-    matches: 0,
-    totalPairs: 0,
-    started: false,
-    timer: null,
-    secs: 0,
+    deck: [], first: null, second: null, lock: false,
+    moves: 0, matches: 0, totalPairs: 0, started: false, timer: null, secs: 0,
   };
 
   function shuffle(a){
@@ -164,30 +275,23 @@
     }
     return a;
   }
+  function fmtTime(s){ const m = Math.floor(s/60); const r = s%60; return `${m}:${r.toString().padStart(2,'0')}`; }
+  function setColsByCount(n){ const cols = (n===16)?4 : (n===20)?5 : (n===24)?6 : Math.ceil(Math.sqrt(n)); board.style.setProperty('--cols', cols); }
+  function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'), 1400); }
 
-  function fmtTime(s){
-    const m = Math.floor(s/60); const r = s%60; return `${m}:${r.toString().padStart(2,'0')}`;
-  }
-
-  function setColsByCount(n){
-    // nice grid widths for 16, 20, 24
-    const cols = (n===16)?4 : (n===20)?5 : (n===24)?6 : Math.ceil(Math.sqrt(n));
-    board.style.setProperty('--cols', cols);
-  }
-
-  function toast(msg){
-    toastEl.textContent = msg; toastEl.classList.add('show');
-    setTimeout(()=>toastEl.classList.remove('show'), 1400);
-  }
-
-  // ====== GAME BUILD ======
+  // ====== デッキ生成（カテゴリ対応・できるだけ現行構造に寄せる） ======
   function buildDeck(pairCount){
-    const pairs = MASTER_PAIRS.slice(0, pairCount);
+    const cat = categoryEl.value;
+    const source = WORD_CATEGORIES[cat] || WORD_CATEGORIES.trap;
+    const pairs = source.slice(0, pairCount); // シンプルに先頭から必要数（必要ならあとでランダム抽出に変更可）
+
     const cards = [];
     let cid = 1;
     for(const p of pairs){
-      cards.push({ cid: cid++, text: p.ja, lang: 'JP', pair: p.id });
-      cards.push({ cid: cid++, text: p.en, lang: 'EN', pair: p.id });
+      // JP
+      cards.push({ cid: cid++, text: p.ja, lang: 'JP', pair: p.id, hint: p.hint || '' });
+      // EN
+      cards.push({ cid: cid++, text: p.en, lang: 'EN', pair: p.id, hint: p.hint || '' });
     }
     return shuffle(cards);
   }
@@ -218,7 +322,7 @@
       lang.textContent = (card.lang === 'JP' ? '日本語' : 'English');
       const hint = document.createElement('div');
       hint.className = 'pairhint';
-      hint.textContent = `concept: ${card.pair}`;
+      hint.textContent = card.hint ? `hint: ${card.hint}` : `concept: ${card.pair}`;
       front.appendChild(label); front.appendChild(lang); front.appendChild(hint);
 
       btn.appendChild(back); btn.appendChild(front);
@@ -229,15 +333,11 @@
     }
   }
 
-  // ====== TIMER ======
-  function startTimer(){
-    if(state.started) return;
-    state.started = true;
-    state.timer = setInterval(()=>{ state.secs++; timeEl.textContent = fmtTime(state.secs); }, 1000);
-  }
+  // ====== タイマー ======
+  function startTimer(){ if(state.started) return; state.started = true; state.timer = setInterval(()=>{ state.secs++; timeEl.textContent = fmtTime(state.secs); }, 1000); }
   function stopTimer(){ if(state.timer){ clearInterval(state.timer); state.timer=null; } }
 
-  // ====== GAME FLOW ======
+  // ====== ゲーム進行 ======
   function onFlip(el){
     if(state.lock) return;
     if(el.classList.contains('flipped') || el.classList.contains('matched')) return;
@@ -271,7 +371,7 @@
   function isMatch(a,b){
     const pa = a.dataset.pair, pb = b.dataset.pair;
     const la = a.dataset.lang, lb = b.dataset.lang;
-    return pa === pb && la !== lb; // must be same concept, opposite languages
+    return pa === pb && la !== lb; // 同じ概念ID & 言語が逆
   }
 
   function setStatus(msg){ statusEl.querySelector('span:last-child').textContent = msg; }
@@ -282,10 +382,10 @@
     timeEl.textContent = '0:00'; movesEl.textContent = '0'; matchesEl.textContent = '0';
 
     const pairsWanted = parseInt(deckSizeEl.value,10);
-    state.totalPairs = pairsWanted;
-    totalPairsEl.textContent = pairsWanted;
+    state.totalPairs = Math.min(pairsWanted, (WORD_CATEGORIES[categoryEl.value] || WORD_CATEGORIES.trap).length);
+    totalPairsEl.textContent = state.totalPairs;
 
-    state.deck = buildDeck(pairsWanted);
+    state.deck = buildDeck(state.totalPairs);
     setColsByCount(state.deck.length);
     renderDeck();
     setStatus('Ready');
@@ -299,6 +399,7 @@
   // events
   $('#newGame').addEventListener('click', newGame);
   deckSizeEl.addEventListener('change', newGame);
+  categoryEl.addEventListener('change', newGame);
   debugToggle.addEventListener('change', ()=>{
     document.querySelectorAll('.pairhint').forEach(el=>{
       el.style.display = debugToggle.checked ? 'block' : 'none';
